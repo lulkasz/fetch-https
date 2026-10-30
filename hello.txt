@@ -1,0 +1,1 @@
+Witaj! To jest zawartość pliku hello.txt.

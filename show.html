@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch API - odczyt pliku TXT jako JSON</title>
+</head>
+<body>
+    <h1>Zawartość pliku hello.txt</h1>
+
+    <pre id="wynik">Wczytywanie pliku...</pre>
+
+    <script>
+        async function wczytajPlik() {
+            const wynik = document.getElementById("wynik");
+
+            if (window.location.protocol !== "https:") {
+                wynik.textContent =
+                    "Błąd: strona musi być uruchomiona przez HTTPS.";
+                return;
+            }
+
+            try {
+                const odpowiedz = await fetch("./hello.txt");
+
+                if (!odpowiedz.ok) {
+                    throw new Error(
+                        "Błąd HTTP: " + odpowiedz.status
+                    );
+                }
+
+                const tresc = await odpowiedz.text();
+
+                const dane = {
+                    plik: "hello.txt",
+                    zawartosc: tresc
+                };
+
+                wynik.textContent = JSON.stringify(dane, null, 2);
+            } catch (blad) {
+                wynik.textContent =
+                    "Nie udało się pobrać pliku: " + blad.message;
+            }
+        }
+
+        wczytajPlik();
+    </script>
+</body>
+</html>
