@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Storage API - Local Storage</title>
+</head>
+<body>
+    <h1>Web Storage API - Local Storage</h1>
+
+    <p>Fraza do zapisania: <strong>Ala ma kota</strong></p>
+
+    <button id="zapisz">Zapisz</button>
+
+    <p id="status">Fraza nie została jeszcze zapisana.</p>
+
+    <script>
+        const przycisk = document.getElementById("zapisz");
+        const status = document.getElementById("status");
+
+        przycisk.addEventListener("click", function () {
+            localStorage.setItem("fraza", "Ala ma kota");
+
+            status.textContent =
+                "Zapisano frazę w Local Storage: " +
+                localStorage.getItem("fraza");
+        });
+    </script>
+</body>
+</html>
