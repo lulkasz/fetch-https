@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache API - hello.txt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f4f4f9;
+            color: #333;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        pre {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cache API - hello.txt</h1>
+
+    <button id="zaczytaj">Zaczytaj hello.txt</button>
+    <button id="odczytaj">Odczytaj z cache'u</button>
+
+    <h2>Status</h2>
+    <p id="status">Sprawdzanie cache'u...</p>
+
+    <h2>Zawartość pliku</h2>
+    <pre id="wynik">Oczekiwanie na dane...</pre>
+
+    <script>
+        const nazwaCache = "hello-cache-v1";
+        const adresPliku = new URL("./hello.txt", location.href).href;
+
+        const wynik = document.getElementById("wynik");
+        const status = document.getElementById("status");
+        const przyciskZaczytaj = document.getElementById("zaczytaj");
+        const przyciskOdczytaj = document.getElementById("odczytaj");
+
+        async function odczytajZCache() {
+            const cache = await caches.open(nazwaCache);
+            const odpowiedz = await cache.match(adresPliku);
+
+            if (!odpowiedz) {
+                return false;
+            }
+
+            wynik.textContent = await odpowiedz.text();
+            status.textContent = "Plik odczytano z cache'u.";
+            return true;
+        }
+
+        przyciskZaczytaj.addEventListener("click", async function () {
+            try {
+                status.textContent = "Pobieranie pliku...";
+
+                const odpowiedz = await fetch(adresPliku, {
+                    cache: "no-cache"
+                });
+
+                if (!odpowiedz.ok) {
+                    throw new Error("Błąd HTTP: " + odpowiedz.status);
+                }
+
+                const cache = await caches.open(nazwaCache);
+                await cache.put(adresPliku, odpowiedz.clone());
+
+                wynik.textContent = await odpowiedz.text();
+                status.textContent =
+                    "Plik hello.txt pobrano z serwera i zapisano w cache'u.";
+            } catch (blad) {
+                status.textContent = "Błąd: " + blad.message;
+            }
+        });
+
+        przyciskOdczytaj.addEventListener("click", async function () {
+            try {
+                const znaleziono = await odczytajZCache();
+
+                if (!znaleziono) {
+                    status.textContent =
+                        "Brak pliku w cache'u. Kliknij „Zaczytaj hello.txt”.";
+                }
+            } catch (blad) {
+                status.textContent = "Błąd: " + blad.message;
+            }
+        });
+
+        // Przy kolejnym wejściu najpierw korzystamy z cache'u.
+        // Jeśli nie ma tam pliku, pobieramy go z serwera i zapisujemy.
+        async function inicjalizacja() {
+            try {
+                if (!("caches" in window)) {
+                    throw new Error("Ta przeglądarka nie obsługuje Cache API.");
+                }
+
+                const znaleziono = await odczytajZCache();
+
+                if (!znaleziono) {
+                    status.textContent =
+                        "Brak pliku w cache'u. Pobieranie z serwera...";
+
+                    const odpowiedz = await fetch(adresPliku);
+
+                    if (!odpowiedz.ok) {
+                        throw new Error("Błąd HTTP: " + odpowiedz.status);
+                    }
+
+                    const cache = await caches.open(nazwaCache);
+                    await cache.put(adresPliku, odpowiedz.clone());
+
+                    wynik.textContent = await odpowiedz.text();
+                    status.textContent =
+                        "Pobrano plik z serwera i zapisano go w cache'u.";
+                }
+            } catch (blad) {
+                status.textContent = "Błąd: " + blad.message;
+            }
+        }
+
+        inicjalizacja();
+    </script>
+</body>
+</html>
