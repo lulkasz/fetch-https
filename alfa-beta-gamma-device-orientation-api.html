@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orientacja telefonu</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #0b1120;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            padding: 28px;
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px #0005;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 27px;
+        }
+
+        .description {
+            color: #b8c5d9;
+            line-height: 1.6;
+        }
+
+        .orientation {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .value {
+            padding: 18px;
+            background: #172337;
+            border: 1px solid #334155;
+            border-radius: 12px;
+        }
+
+        .value span {
+            display: block;
+            margin-bottom: 8px;
+            color: #93c5fd;
+            font-size: 15px;
+        }
+
+        .value strong {
+            font-size: 27px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 15px;
+            border: 0;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        #status {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #172337;
+            color: #cbd5e1;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        #status.active {
+            color: #4ade80;
+        }
+
+        #status.error {
+            color: #fca5a5;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <h1>📱 Orientacja telefonu</h1>
+
+        <p class="description">
+            Poruszaj i obracaj telefonem. Wartości alfa, beta i gamma
+            będą aktualizowane na podstawie danych czujników urządzenia.
+        </p>
+
+        <section class="orientation">
+            <div class="value">
+                <span>Alfa (α) — obrót wokół osi Z</span>
+                <strong id="alpha">— °</strong>
+            </div>
+
+            <div class="value">
+                <span>Beta (β) — pochylenie przód–tył</span>
+                <strong id="beta">— °</strong>
+            </div>
+
+            <div class="value">
+                <span>Gamma (γ) — pochylenie na boki</span>
+                <strong id="gamma">— °</strong>
+            </div>
+        </section>
+
+        <button id="start">Uruchom czujniki</button>
+
+        <div id="status" role="status" aria-live="polite">
+            Oczekiwanie na uruchomienie czujników.
+        </div>
+    </main>
+
+    <script>
+        const alphaOutput = document.getElementById("alpha");
+        const betaOutput = document.getElementById("beta");
+        const gammaOutput = document.getElementById("gamma");
+        const statusOutput = document.getElementById("status");
+        const startButton = document.getElementById("start");
+
+        let listening = false;
+
+        function setStatus(message, type = "") {
+            statusOutput.textContent = message;
+            statusOutput.className = type;
+        }
+
+        function showOrientation(event) {
+            alphaOutput.textContent =
+                event.alpha === null
+                    ? "Brak danych"
+                    : event.alpha.toFixed(2) + "°";
+
+            betaOutput.textContent =
+                event.beta === null
+                    ? "Brak danych"
+                    : event.beta.toFixed(2) + "°";
+
+            gammaOutput.textContent =
+                event.gamma === null
+                    ? "Brak danych"
+                    : event.gamma.toFixed(2) + "°";
+
+            if (
+                event.alpha !== null ||
+                event.beta !== null ||
+                event.gamma !== null
+            ) {
+                setStatus(
+                    "Czujniki działają. Wartości zmieniają się wraz " +
+                    "z orientacją telefonu.",
+                    "active"
+                );
+            } else {
+                setStatus(
+                    "Brak danych z czujników orientacji.",
+                    "error"
+                );
+            }
+        }
+
+        async function startOrientation() {
+            if (listening) {
+                return;
+            }
+
+            if (!("DeviceOrientationEvent" in window)) {
+                setStatus(
+                    "Ta przeglądarka nie obsługuje Device Orientation API.",
+                    "error"
+                );
+                return;
+            }
+
+            if (!window.isSecureContext) {
+                setStatus(
+                    "Uruchom stronę przez HTTPS lub localhost.",
+                    "error"
+                );
+                return;
+            }
+
+            try {
+                if (
+                    typeof DeviceOrientationEvent.requestPermission ===
+                    "function"
+                ) {
+                    const permission =
+                        await DeviceOrientationEvent.requestPermission();
+
+                    if (permission !== "granted") {
+                        setStatus(
+                            "Nie udzielono zgody na dostęp do czujników.",
+                            "error"
+                        );
+                        return;
+                    }
+                }
+
+                window.addEventListener(
+                    "deviceorientation",
+                    showOrientation
+                );
+
+                listening = true;
+                startButton.disabled = true;
+                startButton.textContent = "Czujniki uruchomione";
+
+                setStatus(
+                    "Oczekiwanie na dane z czujników telefonu..."
+                );
+            } catch (error) {
+                setStatus(
+                    "Nie udało się uruchomić czujników: " + error.message,
+                    "error"
+                );
+            }
+        }
+
+        startButton.addEventListener("click", startOrientation);
+
+        window.addEventListener("pagehide", () => {
+            window.removeEventListener(
+                "deviceorientation",
+                showOrientation
+            );
+        });
+    </script>
+</body>
+</html>
