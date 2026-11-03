@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Device Motion — ruch urządzenia</title>
+    <title>Ruch i orientacja urządzenia</title>
 
     <style>
         * {
@@ -13,8 +13,8 @@
 
         body {
             margin: 0;
-            min-height: 100vh;
             padding: 20px;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -25,8 +25,8 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
-            padding: 26px;
+            max-width: 760px;
+            padding: 25px;
             background: #111827;
             border: 1px solid #334155;
             border-radius: 18px;
@@ -35,28 +35,29 @@
 
         h1 {
             margin-top: 0;
-            font-size: 27px;
+            font-size: clamp(24px, 5vw, 32px);
         }
 
-        p {
+        .description {
             color: #b8c5d9;
             line-height: 1.6;
         }
 
-        .section-title {
-            margin: 24px 0 12px;
+        h2 {
+            margin: 25px 0 12px;
             color: #93c5fd;
-            font-size: 17px;
+            font-size: 19px;
         }
 
-        .values {
-            display: flex;
-            flex-direction: column;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
 
         .value {
-            padding: 17px;
+            min-width: 0;
+            padding: 16px 12px;
             background: #172337;
             border: 1px solid #334155;
             border-radius: 12px;
@@ -64,13 +65,15 @@
 
         .value span {
             display: block;
-            margin-bottom: 7px;
+            margin-bottom: 10px;
             color: #b8c5d9;
             font-size: 14px;
         }
 
         .value strong {
-            font-size: 25px;
+            display: block;
+            overflow-wrap: anywhere;
+            font-size: clamp(18px, 3vw, 24px);
             font-variant-numeric: tabular-nums;
         }
 
@@ -78,7 +81,7 @@
             width: 100%;
             margin-top: 24px;
             padding: 15px;
-            border: none;
+            border: 0;
             border-radius: 10px;
             background: #2563eb;
             color: white;
@@ -113,151 +116,200 @@
         #status.error {
             color: #fca5a5;
         }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 17px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
 <body>
     <main class="container">
-        <h1>📱 Wykrywanie ruchu urządzenia</h1>
+        <h1>📱 Ruch i orientacja urządzenia</h1>
 
-        <p>
+        <p class="description">
             Poruszaj telefonem, przechylaj go i obracaj.
-            Aplikacja wyświetli przyspieszenie w osiach X, Y i Z
-            oraz szybkość obrotu urządzenia.
+            Wartości X, Y i Z będą aktualizowane na żywo
+            na podstawie danych z czujników.
         </p>
 
-        <h2 class="section-title">Przyspieszenie (m/s²)</h2>
-
-        <section class="values">
+        <h2>1. Orientacja — kąty (°)</h2>
+        <section class="grid">
             <div class="value">
-                <span>Oś X — lewo / prawo</span>
+                <span>Alfa — oś Z</span>
+                <strong id="alpha">—</strong>
+            </div>
+            <div class="value">
+                <span>Beta — oś X</span>
+                <strong id="beta">—</strong>
+            </div>
+            <div class="value">
+                <span>Gamma — oś Y</span>
+                <strong id="gamma">—</strong>
+            </div>
+        </section>
+
+        <h2>2. Przyspieszenie bez grawitacji (m/s²)</h2>
+        <section class="grid">
+            <div class="value">
+                <span>X</span>
                 <strong id="accX">—</strong>
             </div>
-
             <div class="value">
-                <span>Oś Y — góra / dół</span>
+                <span>Y</span>
                 <strong id="accY">—</strong>
             </div>
-
             <div class="value">
-                <span>Oś Z — przód / tył</span>
+                <span>Z</span>
                 <strong id="accZ">—</strong>
             </div>
         </section>
 
-        <h2 class="section-title">Przyspieszenie z grawitacją (m/s²)</h2>
-
-        <section class="values">
+        <h2>3. Przyspieszenie z grawitacją (m/s²)</h2>
+        <section class="grid">
             <div class="value">
                 <span>X</span>
-                <strong id="gravX">—</strong>
+                <strong id="gravityX">—</strong>
             </div>
-
             <div class="value">
                 <span>Y</span>
-                <strong id="gravY">—</strong>
+                <strong id="gravityY">—</strong>
             </div>
-
             <div class="value">
                 <span>Z</span>
-                <strong id="gravZ">—</strong>
+                <strong id="gravityZ">—</strong>
             </div>
         </section>
 
-        <h2 class="section-title">Szybkość obrotu (°/s)</h2>
-
-        <section class="values">
+        <h2>4. Szybkość obrotu (°/s)</h2>
+        <section class="grid">
             <div class="value">
-                <span>Alfa — obrót wokół osi Z</span>
-                <strong id="rotAlpha">—</strong>
+                <span>Alfa</span>
+                <strong id="rotationAlpha">—</strong>
             </div>
-
             <div class="value">
-                <span>Beta — obrót wokół osi X</span>
-                <strong id="rotBeta">—</strong>
+                <span>Beta</span>
+                <strong id="rotationBeta">—</strong>
             </div>
-
             <div class="value">
-                <span>Gamma — obrót wokół osi Y</span>
-                <strong id="rotGamma">—</strong>
+                <span>Gamma</span>
+                <strong id="rotationGamma">—</strong>
             </div>
         </section>
 
-        <button id="start">Uruchom czujniki ruchu</button>
+        <button id="start">Uruchom czujniki</button>
 
         <div id="status" role="status" aria-live="polite">
-            Oczekiwanie na uruchomienie czujników.
+            Czujniki są wyłączone.
         </div>
     </main>
 
     <script>
-        const ids = [
+        const fields = [
+            "alpha", "beta", "gamma",
             "accX", "accY", "accZ",
-            "gravX", "gravY", "gravZ",
-            "rotAlpha", "rotBeta", "rotGamma"
+            "gravityX", "gravityY", "gravityZ",
+            "rotationAlpha", "rotationBeta", "rotationGamma"
         ];
 
-        const outputs = {};
-
-        ids.forEach(id => {
-            outputs[id] = document.getElementById(id);
+        const output = {};
+        fields.forEach(id => {
+            output[id] = document.getElementById(id);
         });
 
         const startButton = document.getElementById("start");
         const statusElement = document.getElementById("status");
 
-        let listening = false;
+        let running = false;
+        let orientationReceived = false;
+        let motionReceived = false;
 
         function setStatus(message, type = "") {
             statusElement.textContent = message;
             statusElement.className = type;
         }
 
-        function formatValue(value) {
+        function format(value) {
             return value === null || value === undefined
                 ? "Brak danych"
-                : value.toFixed(3);
+                : Number(value).toFixed(2);
+        }
+
+        function updateOrientation(event) {
+            orientationReceived = true;
+
+            output.alpha.textContent = format(event.alpha) + "°";
+            output.beta.textContent = format(event.beta) + "°";
+            output.gamma.textContent = format(event.gamma) + "°";
+
+            updateStatus();
         }
 
         function updateMotion(event) {
-            const acceleration = event.acceleration;
-            const gravity = event.accelerationIncludingGravity;
-            const rotation = event.rotationRate;
+            motionReceived = true;
 
-            outputs.accX.textContent = formatValue(acceleration?.x);
-            outputs.accY.textContent = formatValue(acceleration?.y);
-            outputs.accZ.textContent = formatValue(acceleration?.z);
+            const a = event.acceleration;
+            const g = event.accelerationIncludingGravity;
+            const r = event.rotationRate;
 
-            outputs.gravX.textContent = formatValue(gravity?.x);
-            outputs.gravY.textContent = formatValue(gravity?.y);
-            outputs.gravZ.textContent = formatValue(gravity?.z);
+            output.accX.textContent = format(a?.x);
+            output.accY.textContent = format(a?.y);
+            output.accZ.textContent = format(a?.z);
 
-            outputs.rotAlpha.textContent = formatValue(rotation?.alpha);
-            outputs.rotBeta.textContent = formatValue(rotation?.beta);
-            outputs.rotGamma.textContent = formatValue(rotation?.gamma);
+            output.gravityX.textContent = format(g?.x);
+            output.gravityY.textContent = format(g?.y);
+            output.gravityZ.textContent = format(g?.z);
 
-            setStatus(
-                "Czujniki aktywne — dane ruchu są aktualizowane na żywo.",
-                "active"
-            );
+            output.rotationAlpha.textContent = format(r?.alpha) + "°/s";
+            output.rotationBeta.textContent = format(r?.beta) + "°/s";
+            output.rotationGamma.textContent = format(r?.gamma) + "°/s";
+
+            updateStatus();
         }
 
-        async function startMotion() {
-            if (listening) {
-                return;
-            }
-
-            if (!("DeviceMotionEvent" in window)) {
+        function updateStatus() {
+            if (orientationReceived && motionReceived) {
                 setStatus(
-                    "Ta przeglądarka nie obsługuje Device Motion API.",
+                    "Czujniki działają. Orientacja i ruch są aktualizowane na żywo.",
+                    "active"
+                );
+            } else if (orientationReceived) {
+                setStatus(
+                    "Otrzymano dane orientacji. Oczekiwanie na dane ruchu..."
+                );
+            } else if (motionReceived) {
+                setStatus(
+                    "Otrzymano dane ruchu. Oczekiwanie na orientację..."
+                );
+            }
+        }
+
+        async function startSensors() {
+            if (running) return;
+
+            if (!window.isSecureContext) {
+                setStatus(
+                    "Otwórz stronę przez HTTPS lub localhost.",
                     "error"
                 );
                 return;
             }
 
-            if (!window.isSecureContext) {
+            if (!("DeviceMotionEvent" in window) &&
+                !("DeviceOrientationEvent" in window)) {
                 setStatus(
-                    "Uruchom stronę przez HTTPS lub localhost.",
+                    "Przeglądarka nie obsługuje API czujników urządzenia.",
                     "error"
                 );
                 return;
@@ -265,6 +317,7 @@
 
             try {
                 if (
+                    typeof DeviceMotionEvent !== "undefined" &&
                     typeof DeviceMotionEvent.requestPermission === "function"
                 ) {
                     const permission =
@@ -272,22 +325,43 @@
 
                     if (permission !== "granted") {
                         setStatus(
-                            "Nie udzielono zgody na dostęp do czujników.",
+                            "Brak zgody na dostęp do czujnika ruchu.",
                             "error"
                         );
                         return;
                     }
                 }
 
-                window.addEventListener("devicemotion", updateMotion);
+                if (
+                    typeof DeviceOrientationEvent !== "undefined" &&
+                    typeof DeviceOrientationEvent.requestPermission === "function"
+                ) {
+                    const permission =
+                        await DeviceOrientationEvent.requestPermission();
 
-                listening = true;
+                    if (permission !== "granted") {
+                        setStatus(
+                            "Brak zgody na dostęp do czujnika orientacji.",
+                            "error"
+                        );
+                        return;
+                    }
+                }
+
+                window.addEventListener(
+                    "deviceorientation",
+                    updateOrientation
+                );
+                window.addEventListener(
+                    "devicemotion",
+                    updateMotion
+                );
+
+                running = true;
                 startButton.disabled = true;
                 startButton.textContent = "Czujniki uruchomione";
 
-                setStatus(
-                    "Oczekiwanie na pierwsze dane z czujników..."
-                );
+                setStatus("Oczekiwanie na pierwsze odczyty z czujników...");
             } catch (error) {
                 setStatus(
                     "Nie udało się uruchomić czujników: " + error.message,
@@ -296,10 +370,17 @@
             }
         }
 
-        startButton.addEventListener("click", startMotion);
+        startButton.addEventListener("click", startSensors);
 
         window.addEventListener("pagehide", () => {
-            window.removeEventListener("devicemotion", updateMotion);
+            window.removeEventListener(
+                "deviceorientation",
+                updateOrientation
+            );
+            window.removeEventListener(
+                "devicemotion",
+                updateMotion
+            );
         });
     </script>
 </body>
