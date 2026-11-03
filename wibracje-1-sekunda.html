@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wibracje telefonu</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 30px;
+            text-align: center;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px #0004;
+        }
+
+        h1 {
+            font-size: 27px;
+        }
+
+        p {
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 17px;
+            border: none;
+            border-radius: 12px;
+            background: #2563eb;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <h1>📳 Wibracje telefonu</h1>
+
+        <p>
+            Naciśnij przycisk, aby uruchomić wibracje
+            telefonu przez jedną sekundę.
+        </p>
+
+        <button id="vibrateButton">
+            📳 Wibruj przez 1 sekundę
+        </button>
+
+        <div id="status" role="status" aria-live="polite">
+            Gotowe do uruchomienia.
+        </div>
+    </main>
+
+    <script>
+        const button = document.getElementById("vibrateButton");
+        const status = document.getElementById("status");
+
+        button.addEventListener("click", function () {
+            if ("vibrate" in navigator) {
+                const result = navigator.vibrate(1000);
+
+                if (result) {
+                    status.textContent =
+                        "Uruchomiono wibracje na 1 sekundę.";
+                } else {
+                    status.textContent =
+                        "Przeglądarka nie uruchomiła wibracji.";
+                }
+            } else {
+                status.textContent =
+                    "To urządzenie lub przeglądarka nie obsługuje wibracji.";
+            }
+        });
+    </script>
+</body>
+</html>
