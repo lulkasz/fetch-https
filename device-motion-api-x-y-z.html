@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Motion — ruch urządzenia</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0b1120;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 26px;
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px #0005;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 27px;
+        }
+
+        p {
+            color: #b8c5d9;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            margin: 24px 0 12px;
+            color: #93c5fd;
+            font-size: 17px;
+        }
+
+        .values {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .value {
+            padding: 17px;
+            background: #172337;
+            border: 1px solid #334155;
+            border-radius: 12px;
+        }
+
+        .value span {
+            display: block;
+            margin-bottom: 7px;
+            color: #b8c5d9;
+            font-size: 14px;
+        }
+
+        .value strong {
+            font-size: 25px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        #status {
+            margin-top: 18px;
+            padding: 14px;
+            background: #172337;
+            border-radius: 10px;
+            color: #cbd5e1;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        #status.active {
+            color: #4ade80;
+        }
+
+        #status.error {
+            color: #fca5a5;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <h1>📱 Wykrywanie ruchu urządzenia</h1>
+
+        <p>
+            Poruszaj telefonem, przechylaj go i obracaj.
+            Aplikacja wyświetli przyspieszenie w osiach X, Y i Z
+            oraz szybkość obrotu urządzenia.
+        </p>
+
+        <h2 class="section-title">Przyspieszenie (m/s²)</h2>
+
+        <section class="values">
+            <div class="value">
+                <span>Oś X — lewo / prawo</span>
+                <strong id="accX">—</strong>
+            </div>
+
+            <div class="value">
+                <span>Oś Y — góra / dół</span>
+                <strong id="accY">—</strong>
+            </div>
+
+            <div class="value">
+                <span>Oś Z — przód / tył</span>
+                <strong id="accZ">—</strong>
+            </div>
+        </section>
+
+        <h2 class="section-title">Przyspieszenie z grawitacją (m/s²)</h2>
+
+        <section class="values">
+            <div class="value">
+                <span>X</span>
+                <strong id="gravX">—</strong>
+            </div>
+
+            <div class="value">
+                <span>Y</span>
+                <strong id="gravY">—</strong>
+            </div>
+
+            <div class="value">
+                <span>Z</span>
+                <strong id="gravZ">—</strong>
+            </div>
+        </section>
+
+        <h2 class="section-title">Szybkość obrotu (°/s)</h2>
+
+        <section class="values">
+            <div class="value">
+                <span>Alfa — obrót wokół osi Z</span>
+                <strong id="rotAlpha">—</strong>
+            </div>
+
+            <div class="value">
+                <span>Beta — obrót wokół osi X</span>
+                <strong id="rotBeta">—</strong>
+            </div>
+
+            <div class="value">
+                <span>Gamma — obrót wokół osi Y</span>
+                <strong id="rotGamma">—</strong>
+            </div>
+        </section>
+
+        <button id="start">Uruchom czujniki ruchu</button>
+
+        <div id="status" role="status" aria-live="polite">
+            Oczekiwanie na uruchomienie czujników.
+        </div>
+    </main>
+
+    <script>
+        const ids = [
+            "accX", "accY", "accZ",
+            "gravX", "gravY", "gravZ",
+            "rotAlpha", "rotBeta", "rotGamma"
+        ];
+
+        const outputs = {};
+
+        ids.forEach(id => {
+            outputs[id] = document.getElementById(id);
+        });
+
+        const startButton = document.getElementById("start");
+        const statusElement = document.getElementById("status");
+
+        let listening = false;
+
+        function setStatus(message, type = "") {
+            statusElement.textContent = message;
+            statusElement.className = type;
+        }
+
+        function formatValue(value) {
+            return value === null || value === undefined
+                ? "Brak danych"
+                : value.toFixed(3);
+        }
+
+        function updateMotion(event) {
+            const acceleration = event.acceleration;
+            const gravity = event.accelerationIncludingGravity;
+            const rotation = event.rotationRate;
+
+            outputs.accX.textContent = formatValue(acceleration?.x);
+            outputs.accY.textContent = formatValue(acceleration?.y);
+            outputs.accZ.textContent = formatValue(acceleration?.z);
+
+            outputs.gravX.textContent = formatValue(gravity?.x);
+            outputs.gravY.textContent = formatValue(gravity?.y);
+            outputs.gravZ.textContent = formatValue(gravity?.z);
+
+            outputs.rotAlpha.textContent = formatValue(rotation?.alpha);
+            outputs.rotBeta.textContent = formatValue(rotation?.beta);
+            outputs.rotGamma.textContent = formatValue(rotation?.gamma);
+
+            setStatus(
+                "Czujniki aktywne — dane ruchu są aktualizowane na żywo.",
+                "active"
+            );
+        }
+
+        async function startMotion() {
+            if (listening) {
+                return;
+            }
+
+            if (!("DeviceMotionEvent" in window)) {
+                setStatus(
+                    "Ta przeglądarka nie obsługuje Device Motion API.",
+                    "error"
+                );
+                return;
+            }
+
+            if (!window.isSecureContext) {
+                setStatus(
+                    "Uruchom stronę przez HTTPS lub localhost.",
+                    "error"
+                );
+                return;
+            }
+
+            try {
+                if (
+                    typeof DeviceMotionEvent.requestPermission === "function"
+                ) {
+                    const permission =
+                        await DeviceMotionEvent.requestPermission();
+
+                    if (permission !== "granted") {
+                        setStatus(
+                            "Nie udzielono zgody na dostęp do czujników.",
+                            "error"
+                        );
+                        return;
+                    }
+                }
+
+                window.addEventListener("devicemotion", updateMotion);
+
+                listening = true;
+                startButton.disabled = true;
+                startButton.textContent = "Czujniki uruchomione";
+
+                setStatus(
+                    "Oczekiwanie na pierwsze dane z czujników..."
+                );
+            } catch (error) {
+                setStatus(
+                    "Nie udało się uruchomić czujników: " + error.message,
+                    "error"
+                );
+            }
+        }
+
+        startButton.addEventListener("click", startMotion);
+
+        window.addEventListener("pagehide", () => {
+            window.removeEventListener("devicemotion", updateMotion);
+        });
+    </script>
+</body>
+</html>
